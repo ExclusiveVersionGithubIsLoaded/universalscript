@@ -1,0 +1,485 @@
+-- Загрузка OrionLib
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
+
+-- Основное окно
+local Window = OrionLib:MakeWindow({Name = "Version Hub | version | gmiler_lol | BETA", HidePremium = false, SaveConfig = true, ConfigFolder = "VersionHubConfig"})
+
+-- Вкладка Universal
+local UniversalTab = Window:MakeTab({
+    Name = "Universal",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local HttpService = game:GetService("HttpService")
+local savedPositions = {}
+local selectedPlayer
+local tpDelay = 0
+local flying = false
+local noclip = false
+local ESP_Enabled = false
+local spectating = false
+local flySpeed = 50
+local fov = 70
+local originalAppearance = {}
+local webhookEnabled = false
+local webhookURL = ""
+local key = "VersionHUB_vh9794060"
+local aimbotMode = nil
+local aimThroughWalls = false
+local aimRadius = 500 -- Радиус, в котором aimbot будет работать
+local selectedPlayer = nil
+local aimCircle = Drawing.new("Circle")
+
+UniversalTab:AddParagraph("Стандартные функции", "ничего особенного")
+-- Ползунок скорости
+UniversalTab:AddSlider({
+    Name = "Walk Speed",
+    Min = 16,
+    Max = 300,
+    Default = 16,
+    Color = Color3.fromRGB(255,255,255),
+    Increment = 1,
+    ValueName = "Speed",
+    Callback = function(value)
+        LocalPlayer.Character.Humanoid.WalkSpeed = value
+    end    
+})
+
+-- Ползунок высоты прыжка
+UniversalTab:AddSlider({
+    Name = "Jump Power",
+    Min = 50,
+    Max = 300,
+    Default = 50,
+    Color = Color3.fromRGB(255,255,255),
+    Increment = 1,
+    ValueName = "Power",
+    Callback = function(value)
+        LocalPlayer.Character.Humanoid.JumpPower = value
+    end    
+})
+
+-- Ползунок поля зрения
+UniversalTab:AddSlider({
+    Name = "Field of View",
+    Min = 70,
+    Max = 120,
+    Default = 70,
+    Color = Color3.fromRGB(255,255,255),
+    Increment = 1,
+    ValueName = "FOV",
+    Callback = function(value)
+        fov = value
+        workspace.CurrentCamera.FieldOfView = value
+    end    
+})
+
+-- Ползунок скорости полёта
+UniversalTab:AddSlider({
+    Name = "Fly Speed",
+    Min = 16,
+    Max = 300,
+    Default = 50,
+    Color = Color3.fromRGB(255,255,255),
+    Increment = 1,
+    ValueName = "Fly Speed",
+    Callback = function(value)
+        flySpeed = value
+    end    
+})
+
+-- Функция Fly
+UniversalTab:AddToggle({
+    Name = "Fly",
+    Default = false,
+    Callback = function(value)
+        flying = value
+        if flying then
+            local BodyGyro = Instance.new("BodyGyro")
+            local BodyVelocity = Instance.new("BodyVelocity")
+            BodyGyro.P = 9e4
+            BodyGyro.maxTorque = Vector3.new(9e9, 9e9, 9e9)
+            BodyGyro.cframe = LocalPlayer.Character.HumanoidRootPart.CFrame
+            BodyGyro.Parent = LocalPlayer.Character.HumanoidRootPart
+
+            BodyVelocity.velocity = Vector3.new(0, 0, 0)
+            BodyVelocity.maxForce = Vector3.new(9e9, 9e9, 9e9)
+            BodyVelocity.Parent = LocalPlayer.Character.HumanoidRootPart
+
+            flyConnection = RunService.Heartbeat:Connect(function()
+                if flying then
+                    local camera = workspace.CurrentCamera
+                    local direction = Vector3.new()
+                    if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+                        direction = direction + camera.CFrame.LookVector
+                    end
+                    if UserInputService:IsKeyDown(Enum.KeyCode.S) then
+                        direction = direction - camera.CFrame.LookVector
+                    end
+                    if UserInputService:IsKeyDown(Enum.KeyCode.A) then
+                        direction = direction - camera.CFrame.RightVector
+                    end
+                    if UserInputService:IsKeyDown(Enum.KeyCode.D) then
+                        direction = direction + camera.CFrame.RightVector
+                    end
+                    BodyVelocity.velocity = direction * flySpeed
+                    BodyGyro.cframe = workspace.CurrentCamera.CFrame
+                    LocalPlayer.Character.Humanoid.PlatformStand = true
+                else
+                    LocalPlayer.Character.Humanoid.PlatformStand = false
+                    BodyGyro:Destroy()
+                    BodyVelocity:Destroy()
+                    flyConnection:Disconnect()
+                end
+            end)
+        else
+            LocalPlayer.Character.Humanoid.PlatformStand = false
+        end
+    end    
+})
+
+-- Функция NoClip
+UniversalTab:AddToggle({
+    Name = "NoClip",
+    Default = false,
+    Callback = function(value)
+        noclip = value
+        if noclip then
+            RunService.Stepped:Connect(function()
+                if noclip then
+                    for _, v in pairs(LocalPlayer.Character:GetDescendants()) do
+                        if v:IsA("BasePart") and v.CanCollide then
+                            v.CanCollide = false
+                        end
+                    end
+                end
+            end)
+        end
+    end    
+})
+
+local infiniteJumpEnabled = false
+
+-- Функция для бесконечного прыжка
+local function onJumpRequest()
+    if infiniteJumpEnabled then
+        LocalPlayer.Character:FindFirstChildOfClass('Humanoid'):ChangeState("Jumping")
+    end
+end
+
+-- Подключаем функцию к событию
+UserInputService.JumpRequest:Connect(onJumpRequest)
+
+-- Добавляем чекбокс для включения/выключения бесконечного прыжка
+UniversalTab:AddToggle({
+    Name = "Infinite Jump",
+    Default = false,
+    Callback = function(value)
+        infiniteJumpEnabled = value
+    end    
+})
+UniversalTab:AddParagraph("функции для шутеров", "или похожих")
+
+-- Функция ESP
+UniversalTab:AddToggle({
+    Name = "ESP",
+    Default = false,
+    Callback = function(value)
+        ESP_Enabled = value
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer then
+                if ESP_Enabled then
+                    local highlight = Instance.new("Highlight")
+                    highlight.Parent = player.Character
+                    if player.Team then
+                        highlight.FillColor = player.TeamColor.Color
+                    else
+                        highlight.FillColor = Color3.fromRGB(128, 128, 128) -- серый цвет для игроков без команды
+                        highlight.OutlineColor = Color3.fromRGB(0, 0, 0) -- черный градиент
+                    end
+                else
+                    for _, highlight in pairs(player.Character:GetDescendants()) do
+                        if highlight:IsA("Highlight") then
+                            highlight:Destroy()
+                        end
+                    end
+                end
+            end
+        end
+        -- Обновление ESP для новых игроков
+        Players.PlayerAdded:Connect(function(player)
+            if ESP_Enabled then
+                local highlight = Instance.new("Highlight")
+                highlight.Parent = player.Character
+                if player.Team then
+                    highlight.FillColor = player.TeamColor.Color
+                else
+                    highlight.FillColor = Color3.fromRGB(128, 128, 128)
+                    highlight.OutlineColor = Color3.fromRGB(0, 0, 0)
+                end
+            end
+        end)
+    end    
+})
+
+-- Переменные для управления aimbot
+local aimbotEnabled = false
+local aimThroughWalls = false
+local aimRadius = 500 -- Радиус, в котором aimbot будет работать
+
+-- Функция для проверки видимости цели
+local function isTargetVisible(target)
+    local origin = workspace.CurrentCamera.CFrame.Position
+    local direction = (target.Position - origin).Unit
+    local ray = Ray.new(origin, direction * (target.Position - origin).Magnitude)
+    local hitPart, hitPosition = workspace:FindPartOnRay(ray, LocalPlayer.Character, false, true)
+    
+    if hitPart then
+        return hitPart:IsDescendantOf(target.Parent)
+    end
+    return false
+end
+
+-- Функция для поиска ближайшего игрока в пределах радиуса прицела
+local function getClosestPlayerToCursor()
+    local closestPlayer
+    local shortestDistance = math.huge
+    local mouseLocation = UserInputService:GetMouseLocation()
+
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
+            local character = player.Character
+            local characterPosition, onScreen = workspace.CurrentCamera:WorldToViewportPoint(character.PrimaryPart.Position)
+            local distanceFromCenter = (Vector2.new(characterPosition.X, characterPosition.Y) - mouseLocation).Magnitude
+
+            -- Проверяем, находится ли игрок в радиусе прицела и видим ли он
+            if distanceFromCenter < aimRadius and (aimThroughWalls or isTargetVisible(character.PrimaryPart)) and onScreen then
+                if distanceFromCenter < shortestDistance then
+                    closestPlayer = player
+                    shortestDistance = distanceFromCenter
+                end
+            end
+        end
+    end
+
+    return closestPlayer
+end
+
+-- Функция для автоматического наведения на игрока
+local function aimAtClosestPlayer()
+    if aimbotEnabled and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
+        local closestPlayer = getClosestPlayerToCursor()
+        if closestPlayer and closestPlayer.Character and closestPlayer.Character:FindFirstChild("Humanoid") and closestPlayer.Character.Humanoid.Health > 0 then
+            local targetPosition = closestPlayer.Character.PrimaryPart.Position
+            workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, targetPosition)
+        end
+    end
+end
+
+-- Подключаем функцию к событию RenderStepped, чтобы наводка обновлялась каждый кадр
+RunService.RenderStepped:Connect(aimAtClosestPlayer)
+
+-- Добавляем чекбокс для включения/выключения aimbot
+UniversalTab:AddToggle({
+    Name = "Aimbot",
+    Default = false,
+    Callback = function(value)
+        aimbotEnabled = value
+    end    
+})
+
+-- Добавляем чекбокс для включения/выключения наводки через стены
+UniversalTab:AddToggle({
+    Name = "Aim Through Walls",
+    Default = false,
+    Callback = function(value)
+        aimThroughWalls = value
+    end    
+})
+
+UniversalTab:AddParagraph("типо полезные функции", "они просто баганные")
+
+-- Автоматическое обновление списка игроков
+local function updatePlayersList()
+    local playerNames = {}
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            table.insert(playerNames, player.Name)
+        end
+    end
+    return playerNames
+end
+
+-- Обновление списка игроков
+local dropdown
+local function refreshPlayerList()
+    if dropdown then
+        dropdown:Refresh(updatePlayersList(), true)
+    end
+end
+
+-- Список игроков
+dropdown = UniversalTab:AddDropdown({
+    Name = "Select Player",
+    Default = "",
+    Options = updatePlayersList(),
+    Callback = function(value)
+        selectedPlayer = Players:FindFirstChild(value)
+    end    
+})
+
+refreshPlayerList()
+
+Players.PlayerAdded:Connect(refreshPlayerList)
+Players.PlayerRemoving:Connect(refreshPlayerList)
+
+-- Сохранение текущего внешнего вида
+local function saveCurrentAppearance()
+    originalAppearance = {}
+    for _, item in pairs(LocalPlayer.Character:GetChildren()) do
+        if item:IsA("Shirt") or item:IsA("Pants") or item:IsA("Hat") or item:IsA("Accessory") or item:IsA("BodyColors") or item:IsA("CharacterMesh") or item:IsA("CharacterAppearance") then
+            table.insert(originalAppearance, item:Clone())
+        end
+    end
+end
+
+-- Восстановление внешнего вида
+local function restoreAppearance()
+    for _, item in pairs(LocalPlayer.Character:GetChildren()) do
+        if item:IsA("Shirt") or item:IsA("Pants") or item:IsA("Hat") or item:IsA("Accessory") or item:IsA("BodyColors") or item:IsA("CharacterMesh") or item:IsA("CharacterAppearance") then
+            item:Destroy()
+        end
+    end
+    for _, item in pairs(originalAppearance) do
+        item.Parent = LocalPlayer.Character
+    end
+end
+
+-- Копирование внешнего вида
+UniversalTab:AddButton({
+    Name = "Copy Outfit",
+    Callback = function()
+        saveCurrentAppearance()
+        if selectedPlayer then
+            restoreAppearance()
+            for _, item in pairs(selectedPlayer.Character:GetChildren()) do
+                if item:IsA("Shirt") or item:IsA("Pants") or item:IsA("Hat") or item:IsA("Accessory") or item:IsA("BodyColors") or item:IsA("CharacterMesh") or item:IsA("CharacterAppearance") then
+                    item:Clone().Parent = LocalPlayer.Character
+                end
+            end
+        end
+    end
+})
+
+-- Восстановление оригинального внешнего вида
+UniversalTab:AddButton({
+    Name = "Restore Original Outfit",
+    Callback = function()
+        restoreAppearance()
+    end
+})
+
+-- Поле ввода для вебхука
+--UniversalTab:AddTextbox({
+    --Name = "Enter Webhook URL",
+    --Default = "",
+    --TextDisappear = true,
+    --Callback = function(value)
+        --webhookURL = value
+    --end    
+--})
+
+-- Включение/выключение вебхука для отправки сообщений
+--UniversalTab:AddToggle({
+   --Name = "Enable Webhook Notifications",
+    --Default = false,
+    --Callback = function(value)
+        --webhookEnabled = value
+        --if webhookEnabled and webhookURL ~= "" then
+            -- Сообщение о подключении игрока
+           --Players.PlayerAdded:Connect(function(player)
+                --local data = {
+                    --["content"] = "Игрок " .. player.Name .. " присоединился к игре.",
+                    --["username"] = "VersionHUB"
+                --}
+                --HttpService:PostAsync(webhookURL, HttpService:JSONEncode(data), Enum.HttpContentType.ApplicationJson)
+            --end)
+            
+            -- Сообщение о выходе игрока
+            --Players.PlayerRemoving:Connect(function(player)
+                --local data = {
+                    --["content"] = "Игрок " .. player.Name .. " вышел из игры.",
+                    --["username"] = "VersionHUB"
+                --}
+                --HttpService:PostAsync(webhookURL, HttpService:JSONEncode(data), Enum.HttpContentType.ApplicationJson)
+            --end)
+        --end
+    --end    
+--})
+
+-- Вкладка для Survive the Killer
+local STKTab = Window:MakeTab({
+    Name = "Survive the Killer",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+STKTab:AddButton({
+    Name = "Load Script",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/VersionGithub/popka/main/VersionHubSurviveTheKiller"))()
+    end    
+})
+
+STKTab:AddParagraph("сделано Version", "сделано Version")
+
+-- Вкладка для Unnamed Shooter
+local USTab = Window:MakeTab({
+    Name = "Unnamed Shooter",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+USTab:AddButton({
+    Name = "Load Script",
+    Callback = function()
+        loadstring(game:HttpGet("https://pastefy.app/Va3GEqmi/raw"))()
+    end    
+})
+
+USTab:AddParagraph("сделано Gmiler_lol", "сделано Gmiler_lol")
+
+-- Вкладка для Piggy
+local PiggyTab = Window:MakeTab({
+    Name = "Piggy",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+PiggyTab:AddParagraph("скоро...", "ждите")
+
+-- Вкладка для Snipers
+local SnipersTab = Window:MakeTab({
+    Name = "Snipers",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+SnipersTab:AddParagraph("скоро...", "ждите")
+
+-- Вкладка для Snipers
+local creditsTab = Window:MakeTab({
+    Name = "credits",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+creditsTab:AddParagraph("ютуб канал Gmiler_lol", "https://www.youtube.com/@20000pro")
+creditsTab:AddParagraph("ютуб канал Version", "https://www.youtube.com/@Version-dev")
+creditsTab:AddParagraph("наш дискорд канал", "https://discord.gg/sn6BGaeBKQ")
+
