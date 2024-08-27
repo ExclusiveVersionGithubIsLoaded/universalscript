@@ -30,7 +30,7 @@ local MainTab = Window:MakeTab({
     PremiumOnly = false
 })
 
-MainTab:AddParagraph("изменение скорости","шадоуфайт228васяпупкинпрогенийигрыплейбойфилантроп")
+MainTab:AddParagraph("изменение скорости","просто будь быстрее")
 
 MainTab:AddSlider({
     Name = "Walk Speed",
@@ -46,7 +46,7 @@ MainTab:AddSlider({
     end
 })
 
-MainTab:AddParagraph("просто высота прыжка","ну типо ок да пон ну пон до?")
+MainTab:AddParagraph("просто высота прыжка","качалка ног?")
 
 MainTab:AddSlider({
     Name = "Jump Power",
@@ -62,7 +62,7 @@ MainTab:AddSlider({
     end
 })
 
-MainTab:AddParagraph("изменение поля зрения","ну типо пон да ок?")
+MainTab:AddParagraph("изменение поля зрения","ну типо пон да?")
 
 MainTab:AddSlider({
     Name = "Field of View",
@@ -78,7 +78,7 @@ MainTab:AddSlider({
     end
 })
 
-MainTab:AddParagraph("просто скорость полёта","ну типо ок да?")
+MainTab:AddParagraph("просто скорость полёта","летай быстрее")
 
 -- Ползунок для изменения скорости полета
 MainTab:AddSlider({
