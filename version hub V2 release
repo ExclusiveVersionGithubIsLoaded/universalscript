@@ -463,6 +463,20 @@ local PiggyTab = Window:MakeTab({
 
 PiggyTab:AddParagraph("скоро...", "ждите")
 
+-- Новая вкладка для 3008
+local Tab3008 = Window:MakeTab({
+    Name = "3008",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+Tab3008:AddButton({
+    Name = "Load Script",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/ExclusiveVersionGithubIsLoaded/universalscript/main/3008"))()
+    end    
+})
+
 -- Вкладка для Snipers
 local SnipersTab = Window:MakeTab({
     Name = "Snipers",
