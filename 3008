@@ -1,0 +1,376 @@
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
+
+local Window = OrionLib:MakeWindow({Name = "Game Hack", HidePremium = false, SaveConfig = true, ConfigFolder = "GameConfig"})
+
+local Player = game.Players.LocalPlayer
+local Humanoid = Player.Character:WaitForChild("Humanoid")
+local HumanoidRootPart = Player.Character:WaitForChild("HumanoidRootPart")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
+
+local speedValue = 16
+local jumpValue = 50
+local fovValue = 70
+local flySpeed = 50
+local flying = false
+local noclipEnabled = false
+local infiniteJumpEnabled = false
+local espEnabled = false
+local autoTeleportEnabled = false
+local autoPressHEnabled = false
+local autoSprintEnabled = false
+local damageSprintEnabled = false
+local speedBoostOnDamageEnabled = false
+
+-- Создаем вкладку
+local MainTab = Window:MakeTab({
+    Name = "Main",
+    Icon = "rbxassetid://4483345998", -- Иконка по вашему выбору
+    PremiumOnly = false
+})
+
+MainTab:AddParagraph("изменение скорости","шадоуфайт228васяпупкинпрогенийигрыплейбойфилантроп")
+
+MainTab:AddSlider({
+    Name = "Walk Speed",
+    Min = 16,
+    Max = 100,
+    Default = 16,
+    Color = Color3.fromRGB(255,255,255),
+    Increment = 1,
+    ValueName = "Speed",
+    Callback = function(value)
+        speedValue = value
+        Humanoid.WalkSpeed = speedValue
+    end
+})
+
+MainTab:AddParagraph("просто высота прыжка","ну типо ок да пон ну пон до?")
+
+MainTab:AddSlider({
+    Name = "Jump Power",
+    Min = 50,
+    Max = 200,
+    Default = 50,
+    Color = Color3.fromRGB(255,255,255),
+    Increment = 1,
+    ValueName = "Jump",
+    Callback = function(value)
+        jumpValue = value
+        Humanoid.JumpPower = jumpValue
+    end
+})
+
+MainTab:AddParagraph("изменение поля зрения","ну типо пон да ок?")
+
+MainTab:AddSlider({
+    Name = "Field of View",
+    Min = 70,
+    Max = 120,
+    Default = 70,
+    Color = Color3.fromRGB(255,255,255),
+    Increment = 1,
+    ValueName = "FOV",
+    Callback = function(value)
+        fovValue = value
+        workspace.CurrentCamera.FieldOfView = fovValue
+    end
+})
+
+MainTab:AddParagraph("просто скорость полёта","ну типо ок да?")
+
+-- Ползунок для изменения скорости полета
+MainTab:AddSlider({
+    Name = "Fly Speed",
+    Min = 10,
+    Max = 200,
+    Default = 50,
+    Color = Color3.fromRGB(255,255,255),
+    Increment = 1,
+    ValueName = "FlySpeed",
+    Callback = function(value)
+        flySpeed = value
+    end
+})
+
+-- Функция для полета
+local function fly()
+    local bodyGyro = Instance.new("BodyGyro")
+    local bodyVelocity = Instance.new("BodyVelocity")
+    
+    bodyGyro.P = 9e4
+    bodyGyro.maxTorque = Vector3.new(9e4, 9e4, 9e4)
+    bodyGyro.cframe = HumanoidRootPart.CFrame
+    bodyGyro.Parent = HumanoidRootPart
+    
+    bodyVelocity.velocity = Vector3.new(0, 0.1, 0)
+    bodyVelocity.maxForce = Vector3.new(9e4, 9e4, 9e4)
+    bodyVelocity.Parent = HumanoidRootPart
+    
+    flying = true
+    
+    local connection
+    connection = RunService.Stepped:Connect(function()
+        if not flying then
+            connection:Disconnect()
+            bodyGyro:Destroy()
+            bodyVelocity:Destroy()
+            return
+        end
+        
+        bodyGyro.cframe = workspace.CurrentCamera.CFrame
+        bodyVelocity.velocity = Vector3.new(0, 0, 0)
+        
+        if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+            bodyVelocity.velocity = workspace.CurrentCamera.CFrame.LookVector * flySpeed
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.A) then
+            bodyVelocity.velocity = bodyVelocity.velocity - workspace.CurrentCamera.CFrame.RightVector * flySpeed
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.S) then
+            bodyVelocity.velocity = workspace.CurrentCamera.CFrame.LookVector * -flySpeed
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.D) then
+            bodyVelocity.velocity = bodyVelocity.velocity + workspace.CurrentCamera.CFrame.RightVector * flySpeed
+        end
+    end)
+end
+
+MainTab:AddParagraph("классный флай","можно умереть от врезания")
+
+MainTab:AddToggle({
+    Name = "Fly",
+    Default = false,
+    Callback = function(value)
+        flying = value
+        if flying then
+            fly()
+        end
+    end
+})
+
+-- Функция для ноклипа
+local function noclip()
+    while noclipEnabled do
+        for _, part in pairs(Player.Character:GetDescendants()) do
+            if part:IsA("BasePart") and part.CanCollide then
+                part.CanCollide = false
+            end
+        end
+        RunService.Stepped:Wait()
+    end
+end
+
+MainTab:AddParagraph("просто ноклип","ничего особенного")
+
+-- Чекбокс для ноклипа
+MainTab:AddToggle({
+    Name = "Noclip",
+    Default = false,
+    Callback = function(value)
+        noclipEnabled = value
+        if noclipEnabled then
+            coroutine.wrap(noclip)()
+        else
+            for _, part in pairs(Player.Character:GetDescendants()) do
+                if part:IsA("BasePart") and not part.CanCollide then
+                    part.CanCollide = true
+                end
+            end
+        end
+    end
+})
+
+MainTab:AddParagraph("просто бесконечный прыжок","можно умереть от высоты")
+
+-- Чекбокс для бесконечного прыжка
+MainTab:AddToggle({
+    Name = "бесконечный прыжок",
+    Default = false,
+    Callback = function(value)
+        infiniteJumpEnabled = value
+    end
+})
+
+UserInputService.JumpRequest:Connect(function()
+    if infiniteJumpEnabled then
+        Humanoid:ChangeState("Jumping")
+    end
+end)
+
+
+
+MainTab:AddParagraph("включает день","ТОЛЬКО ВИЗУАЛЬНО")
+
+-- Кнопка для включения утра
+MainTab:AddButton({
+    Name = "поставить день",
+    Callback = function()
+        Lighting.TimeOfDay = "13:00:00"
+    end
+})
+
+MainTab:AddParagraph("включает ночь","ТОЛЬКО ВИЗУАЛЬНО")
+
+-- Кнопка для включения ночи
+MainTab:AddButton({
+    Name = "поставить ночь",
+    Callback = function()
+        Lighting.TimeOfDay = "19:00:00"
+    end
+})
+
+MainTab:AddParagraph("авто свист","просто свист...")
+
+MainTab:AddToggle({
+    Name = "авто свист",
+    Default = false,
+    Callback = function(value)
+        autoPressH = value
+        while autoPressH do
+            wait(0.1)
+            game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.H, false, game)
+        end
+    end
+})
+
+-- Добавление функции авто-спринта при удерживании W или S
+local holdingKey = false
+local holdingShift = false
+local startTime = 0
+local holdDuration = 1 -- Продолжительность удерживания W или S в секундах
+local activeKey = nil
+
+local function onInputBegan(input)
+    if not autoSprintEnabled then return end -- Если функция отключена, выходим
+
+    if input.KeyCode == Enum.KeyCode.W or input.KeyCode == Enum.KeyCode.S then
+        holdingKey = true
+        startTime = tick() -- Запоминаем время начала удержания
+        activeKey = input.KeyCode
+    end
+end
+
+local function onInputEnded(input)
+    if not autoSprintEnabled then return end -- Если функция отключена, выходим
+
+    if input.KeyCode == Enum.KeyCode.W or input.KeyCode == Enum.KeyCode.S then
+        holdingKey = false
+        activeKey = nil
+        if holdingShift then
+            game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.LeftShift, false, game) -- Отпускаем левый Shift
+            holdingShift = false
+        end
+    end
+end
+
+local function checkSprint()
+    if holdingKey and tick() - startTime >= holdDuration and not holdingShift then
+        holdingShift = true
+        game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.LeftShift, false, game) -- Нажимаем левый Shift
+    end
+end
+
+UserInputService.InputBegan:Connect(onInputBegan)
+UserInputService.InputEnded:Connect(onInputEnded)
+RunService.RenderStepped:Connect(checkSprint)
+
+MainTab:AddParagraph("авто спринт","зажмите W или S на протяжении секунды")
+
+MainTab:AddToggle({
+    Name = "авто бег",
+    Default = false,
+    Callback = function(value)
+        autoSprintEnabled = value
+    end
+})
+
+-- Функция для создания или обновления подсветки
+local function updateHighlight(character)
+    local highlight = character:FindFirstChildOfClass("Highlight")
+    if not highlight then
+        highlight = Instance.new("Highlight")
+        highlight.FillColor = Color3.fromRGB(0, 191, 255)  -- Цвет подсветки (голубой)
+        highlight.OutlineColor = Color3.fromRGB(0, 191, 255)  -- Цвет обводки (голубой)
+        highlight.Parent = character
+    end
+end
+
+-- Функция для обновления подсветки для всех игроков вокруг
+local function updateAllHighlights()
+    for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
+        if player ~= Player and player.Character then
+            updateHighlight(player.Character)
+        end
+    end
+end
+
+-- Функция для запуска или остановки цикла обновления подсветки
+local function toggleHighlightLoop(state)
+    highlightLoopEnabled = state
+    if highlightLoopEnabled then
+        spawn(function()
+            while highlightLoopEnabled do
+                updateAllHighlights()
+                wait(5)  -- Ожидание 5 секунд перед следующим обновлением
+            end
+        end)
+    end
+end
+
+MainTab:AddParagraph("подсветка игроков","при отключении функции новые игроки не будут подсвечиватся")
+
+-- Добавляем чекбокс для управления подсветкой
+MainTab:AddToggle({
+    Name = "подсветка игроков",
+    Default = false,
+    Callback = function(value)
+        toggleHighlightLoop(value)
+    end
+})
+
+MainTab:AddParagraph("показать координаты ","(F5 чтобы скрыть)")
+
+MainTab:AddButton({
+    Name = "показать координаты",
+    Callback = function()
+        -- Создаем новый ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+-- Создаем текстовый элемент для отображения координат
+local coordsLabel = Instance.new("TextLabel")
+coordsLabel.Size = UDim2.new(0, 200, 0, 50)
+coordsLabel.Position = UDim2.new(0, 10, 0, 10)
+coordsLabel.BackgroundTransparency = 0.5
+coordsLabel.TextScaled = true
+coordsLabel.TextColor3 = Color3.new(1, 1, 1)
+coordsLabel.Parent = screenGui
+
+-- Функция для обновления координат
+local function updateCoords()
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local position = character.HumanoidRootPart.Position
+    coordsLabel.Text = "X: " .. math.floor(position.X) .. " Y: " .. math.floor(position.Y) .. " Z: " .. math.floor(position.Z)
+end
+
+-- Подключаем функцию к обновлению кадров
+game:GetService("RunService").RenderStepped:Connect(updateCoords)
+
+-- Показываем/скрываем координаты при нажатии клавиши
+local UIS = game:GetService("UserInputService")
+local coordsVisible = true
+
+UIS.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.F5 then  -- Меняйте F5 на любую клавишу
+        coordsVisible = not coordsVisible
+        screenGui.Enabled = coordsVisible
+    end
+end)
+
+    end
+})
+
+OrionLib:Init()
