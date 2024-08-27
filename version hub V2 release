@@ -477,6 +477,8 @@ Tab3008:AddButton({
     end    
 })
 
+Tab3008:AddParagraph("сделано Version", "сделано Version")
+
 -- Вкладка для Snipers
 local SnipersTab = Window:MakeTab({
     Name = "Snipers",
