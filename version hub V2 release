@@ -495,6 +495,21 @@ local creditsTab = Window:MakeTab({
     PremiumOnly = false
 })
 
+local Tabmvsd = Window:MakeTab({
+    Name = "murders and sheriff duels",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+Tabmvsd:AddButton({
+    Name = "Load Script",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/ExclusiveVersionGithubIsLoaded/universalscript/refs/heads/main/obf%20mvsd"))()
+    end    
+})
+
+Tabmvsd:AddParagraph("Сделано Version", "это я :3")
+
 creditsTab:AddParagraph("ютуб канал Gmiler_lol", "https://www.youtube.com/@20000pro")
 creditsTab:AddParagraph("ютуб канал Version", "https://www.youtube.com/@Version-dev")
 creditsTab:AddParagraph("наш дискорд канал", "https://discord.gg/sn6BGaeBKQ")
