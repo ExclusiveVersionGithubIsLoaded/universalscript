@@ -1,0 +1,324 @@
+-- Подключение Orion Library
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
+
+-- Создание окна
+local Window = OrionLib:MakeWindow({
+    Name = "🌀🌀Version Hub🌀🌀 | script by version", 
+    HidePremium = false, 
+    SaveConfig = true, 
+    ConfigFolder = "OrionConfig"
+})
+
+-- Переменные для настроек
+_G.HeadSize = 1
+_G.TorsoSize = 1
+_G.DisabledHeadResize = true
+_G.DisabledTorsoResize = true
+_G.HighlightEnabled = false
+_G.ShowNames = false -- Никнеймы по умолчанию выключены
+_G.HighlightColor = Color3.fromRGB(255, 0, 0)
+_G.NameTagColor = Color3.fromRGB(255, 0, 0) -- Отдельный цвет для никнеймов
+
+-- Стандартные значения для скорости и прыжка
+local defaultWalkSpeed = game:GetService("Players").LocalPlayer.Character.Humanoid.WalkSpeed
+local defaultJumpPower = game:GetService("Players").LocalPlayer.Character.Humanoid.JumpPower
+
+_G.WalkSpeed = defaultWalkSpeed
+_G.JumpPower = defaultJumpPower
+_G.SpeedEnabled = false
+_G.JumpEnabled = false
+
+-- Функция для изменения скорости
+local function SetWalkSpeed()
+    local player = game:GetService("Players").LocalPlayer
+    if _G.SpeedEnabled then
+        player.Character.Humanoid.WalkSpeed = _G.WalkSpeed
+    else
+        player.Character.Humanoid.WalkSpeed = defaultWalkSpeed
+    end
+end
+
+-- Функция для изменения прыжка
+local function SetJumpPower()
+    local player = game:GetService("Players").LocalPlayer
+    if _G.JumpEnabled then
+        player.Character.Humanoid.JumpPower = _G.JumpPower
+    else
+        player.Character.Humanoid.JumpPower = defaultJumpPower
+    end
+end
+
+-- Функция для изменения размеров головы
+local function ResizeHead()
+    game:GetService('RunService').RenderStepped:Connect(function()
+        for _, player in next, game:GetService('Players'):GetPlayers() do
+            if player.Name ~= game:GetService('Players').LocalPlayer.Name and player.Character and player.Character:FindFirstChild("Head") then
+                if not _G.DisabledHeadResize then
+                    player.Character.Head.Size = Vector3.new(_G.HeadSize, _G.HeadSize, _G.HeadSize)
+                    player.Character.Head.Transparency = 0.75 -- 75% прозрачность головы
+                    player.Character.Head.CanCollide = false -- Отключение коллизии
+                    player.Character.Head.Massless = true -- Отключение массы для головы
+                else
+                    player.Character.Head.Size = Vector3.new(2, 1, 1) -- Стандартный размер головы
+                    player.Character.Head.Transparency = 0 -- Полностью видимая
+                end
+            end
+        end
+    end)
+end
+
+-- Функция для изменения размеров туловища
+local function ResizeTorso()
+    game:GetService('RunService').RenderStepped:Connect(function()
+        for _, player in next, game:GetService('Players'):GetPlayers() do
+            if player.Name ~= game:GetService('Players').LocalPlayer.Name and player.Character and (player.Character:FindFirstChild("Torso") or player.Character:FindFirstChild("UpperTorso")) then
+                local torso = player.Character:FindFirstChild("Torso") or player.Character:FindFirstChild("UpperTorso")
+                if not _G.DisabledTorsoResize then
+                    torso.Size = Vector3.new(_G.TorsoSize, _G.TorsoSize, _G.TorsoSize)
+                    torso.Transparency = 0.75 -- 75% прозрачность туловища
+                    torso.CanCollide = false -- Отключение коллизии
+                    torso.Massless = true -- Отключение массы для туловища
+                else
+                    torso.Size = Vector3.new(2, 2, 1) -- Стандартный размер туловища
+                    torso.Transparency = 0 -- Полностью видимое туловище
+                end
+            end
+        end
+    end)
+end
+
+-- Функция для создания/обновления подсветки игроков
+local function CreateOrUpdateHighlight(player)
+    if player.Character then
+        local highlight = player.Character:FindFirstChild("Highlight")
+        if not highlight and _G.HighlightEnabled and player.Name ~= game:GetService('Players').LocalPlayer.Name then
+            highlight = Instance.new("Highlight")
+            highlight.Parent = player.Character
+            highlight.FillColor = _G.HighlightColor
+            highlight.OutlineColor = _G.HighlightColor
+            highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+        elseif highlight and not _G.HighlightEnabled then
+            highlight:Destroy()
+        elseif highlight then
+            highlight.FillColor = _G.HighlightColor
+            highlight.OutlineColor = _G.HighlightColor
+        end
+    end
+end
+
+-- Функция для управления подсветкой
+local function UpdateHighlights()
+    game:GetService('RunService').RenderStepped:Connect(function()
+        for _, player in pairs(game:GetService('Players'):GetPlayers()) do
+            if player.Name ~= game:GetService('Players').LocalPlayer.Name then
+                CreateOrUpdateHighlight(player)
+            end
+        end
+    end)
+end
+
+-- Функция для отображения никнеймов
+local function DisplayNames()
+    game:GetService('RunService').RenderStepped:Connect(function()
+        for _, player in next, game:GetService('Players'):GetPlayers() do
+            if player.Name ~= game:GetService('Players').LocalPlayer.Name and player.Character and player.Character:FindFirstChild("Head") then
+                local nameTag = player.Character.Head:FindFirstChild("NameTag")
+                if _G.ShowNames and not nameTag then
+                    local billboard = Instance.new("BillboardGui", player.Character.Head)
+                    billboard.Name = "NameTag"
+                    billboard.Size = UDim2.new(0, 200, 0, 50)
+                    billboard.Adornee = player.Character.Head
+                    billboard.AlwaysOnTop = true
+
+                    local textLabel = Instance.new("TextLabel", billboard)
+                    textLabel.Size = UDim2.new(1, 0, 1, 0)
+                    textLabel.Text = player.Name
+                    textLabel.TextColor3 = _G.NameTagColor
+                    textLabel.BackgroundTransparency = 1
+                elseif not _G.ShowNames and nameTag then
+                    nameTag:Destroy()
+                elseif nameTag then
+                    nameTag.TextLabel.TextColor3 = _G.NameTagColor -- Изменение цвета никнеймов
+                end
+            end
+        end
+    end)
+end
+
+-- Создание вкладки "Universal" для общих настроек
+local TabUniversal = Window:MakeTab({
+    Name = "Universal",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+-- Слайдер для изменения скорости
+TabUniversal:AddSlider({
+    Name = "speed",
+    Min = 16, -- стандартная скорость
+    Max = 500,
+    Default = defaultWalkSpeed,
+    Color = Color3.fromRGB(127, 255, 212), -- аквамариновый цвет
+    Increment = 1,
+    ValueName = "Speed",
+    Callback = function(Value)
+        _G.WalkSpeed = Value
+        SetWalkSpeed()
+    end    
+})
+
+-- Чекбокс для включения/отключения изменения скорости
+TabUniversal:AddToggle({
+    Name = "enable speed",
+    Default = false,
+    Callback = function(Value)
+        _G.SpeedEnabled = Value
+        SetWalkSpeed()
+    end    
+})
+
+-- Слайдер для изменения прыжка
+TabUniversal:AddSlider({
+    Name = "jump power",
+    Min = 50, -- стандартная сила прыжка
+    Max = 500,
+    Default = defaultJumpPower,
+    Color = Color3.fromRGB(127, 255, 212), -- аквамариновый цвет
+    Increment = 1,
+    ValueName = "Jump Power",
+    Callback = function(Value)
+        _G.JumpPower = Value
+        SetJumpPower()
+    end    
+})
+
+-- Чекбокс для включения/отключения изменения прыжка
+TabUniversal:AddToggle({
+    Name = "enable jump",
+    Default = false,
+    Callback = function(Value)
+        _G.JumpEnabled = Value
+        SetJumpPower()
+    end    
+})
+
+-- Создание вкладки "Hitbox" для изменения размеров тела
+local TabHitbox = Window:MakeTab({
+    Name = "Hitbox",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+-- Слайдер для изменения размера головы
+TabHitbox:AddSlider({
+    Name = "head size",
+    Min = 1,
+    Max = 100,
+    Default = 15,
+    Color = Color3.fromRGB(127, 255, 212), -- аквамариновый цвет
+    Increment = 1,
+    ValueName = "Head Size",
+    Callback = function(Value)
+        _G.HeadSize = Value
+    end    
+})
+
+-- Чекбокс для включения/отключения изменения размера головы
+TabHitbox:AddToggle({
+    Name = "enable head resize",
+    Default = false,
+    Callback = function(Value)
+        _G.DisabledHeadResize = not Value
+        ResizeHead()
+    end    
+})
+
+-- Слайдер для изменения размера туловища
+TabHitbox:AddSlider({
+    Name = "torso size",
+    Min = 1,
+    Max = 100,
+    Default = 15,
+    Color = Color3.fromRGB(127, 255, 212), -- аквамариновый цвет
+    Increment = 1,
+    ValueName = "Torso Size",
+    Callback = function(Value)
+        _G.TorsoSize = Value
+    end    
+})
+
+-- Чекбокс для включения/отключения изменения размера туловища
+TabHitbox:AddToggle({
+    Name = "enable torso resize",
+    Default = false,
+    Callback = function(Value)
+        _G.DisabledTorsoResize = not Value
+        ResizeTorso()
+    end    
+})
+
+-- Создание вкладки "Visual" для визуальных эффектов
+local TabVisual = Window:MakeTab({
+    Name = "Visual",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+-- Чекбокс для включения/отключения подсветки игроков
+TabVisual:AddToggle({
+    Name = "enable esp",
+    Default = false,
+    Callback = function(Value)
+        _G.HighlightEnabled = Value
+        UpdateHighlights()
+    end    
+})
+
+-- Чекбокс для отображения/отключения никнеймов игроков
+TabVisual:AddToggle({
+    Name = "name tags",
+    Default = false, -- Никнеймы по умолчанию выключены
+    Callback = function(Value)
+        _G.ShowNames = Value
+        DisplayNames()
+    end    
+})
+
+-- Палитра для изменения цвета подсветки
+TabVisual:AddColorpicker({
+    Name = "esp color",
+    Default = Color3.fromRGB(255, 0, 0),
+    Callback = function(Value)
+        _G.HighlightColor = Value
+        UpdateHighlights() -- Обновляем цвет у всех подсветок
+    end    
+})
+
+-- Палитра для изменения цвета никнеймов
+TabVisual:AddColorpicker({
+    Name = "name tag color",
+    Default = Color3.fromRGB(255, 0, 0),
+    Callback = function(Value)
+        _G.NameTagColor = Value
+        DisplayNames() -- Обновляем цвет никнеймов
+    end    
+})
+
+TabUniversal:AddButton({
+    Name = "destroy script (not destroy functions. Just Gui)",
+    Callback = function()
+        OrionLib:Destroy()
+    end    
+})
+
+-- Создание вкладки "Visual" для визуальных эффектов
+local Tabcredit = Window:MakeTab({
+    Name = "Credits",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+Tabcredit:AddParagraph("creator: Version","i create a video =]")
+
+-- Инициализация окна
+OrionLib:Init()
