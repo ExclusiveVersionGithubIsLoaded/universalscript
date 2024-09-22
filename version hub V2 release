@@ -488,13 +488,6 @@ local SnipersTab = Window:MakeTab({
 
 SnipersTab:AddParagraph("скоро...", "ждите")
 
--- Вкладка для Snipers
-local creditsTab = Window:MakeTab({
-    Name = "credits",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
-
 local Tabmvsd = Window:MakeTab({
     Name = "murders and sheriff duels",
     Icon = "rbxassetid://4483345998",
@@ -509,6 +502,13 @@ Tabmvsd:AddButton({
 })
 
 Tabmvsd:AddParagraph("Сделано Version", "это я :3")
+
+-- Вкладка для credits
+local creditsTab = Window:MakeTab({
+    Name = "credits",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
 
 creditsTab:AddParagraph("ютуб канал Gmiler_lol", "https://www.youtube.com/@20000pro")
 creditsTab:AddParagraph("ютуб канал Version", "https://www.youtube.com/@Version-dev")
