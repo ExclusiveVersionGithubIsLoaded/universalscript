@@ -33,7 +33,6 @@ local aimbotMode = nil
 local aimThroughWalls = false
 local aimRadius = 500 -- Радиус, в котором aimbot будет работать
 local selectedPlayer = nil
-local aimCircle = Drawing.new("Circle")
 
 UniversalTab:AddParagraph("Стандартные функции", "ничего особенного")
 -- Ползунок скорости
