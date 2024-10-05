@@ -1,0 +1,547 @@
+-- Скрипт на аимблокс
+
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
+local Window = OrionLib:MakeWindow({Name = "Custom Script", HidePremium = true, SaveConfig = true, ConfigFolder = "OrionTest"})
+
+-- Вкладки
+local movementTab = Window:MakeTab({
+	Name = "Movement",
+	Icon = "rbxassetid://4483345998",
+	PremiumOnly = false
+})
+
+local visualTab = Window:MakeTab({
+	Name = "Visual",
+	Icon = "rbxassetid://4483345998",
+	PremiumOnly = false
+})
+
+local MiscTab = Window:MakeTab({
+	Name = "Misc",
+	Icon = "rbxassetid://4483345998",
+	PremiumOnly = false
+})
+
+-- Глобальные переменные
+local playerSpeed = 16
+--local speednabled = false
+local flySpeed = 1  -- Скорость полёта
+local flying = false
+local playerFlyHeight = 50
+local direction = Vector3.new(0, 0, 0)
+local infiniteJumpEnabled = false
+
+-- Функция для добавления никнеймов
+local function ToggleNametags(state)
+    local players = game:GetService("Players")
+
+    -- Функция для добавления или удаления BillboardGui с никнеймом
+    local function updateNametag(player)
+        if player.Character and player.Character:FindFirstChild("Head") then
+            if state then
+                -- Проверка, есть ли уже BillboardGui
+                if not player.Character.Head:FindFirstChild("Nametag") then
+                    -- Создание BillboardGui с никнеймом
+                    local billboardGui = Instance.new("BillboardGui")
+                    billboardGui.Name = "Nametag"
+                    billboardGui.Size = UDim2.new(5, 0, 2.5, 0)
+                    billboardGui.Adornee = player.Character.Head
+                    billboardGui.AlwaysOnTop = true
+                    billboardGui.Parent = player.Character.Head
+
+                    -- Добавляем текстовый лейбл для отображения ника
+                    local textLabel = Instance.new("TextLabel", billboardGui)
+                    textLabel.Size = UDim2.new(1, 0, 1, 0)
+                    textLabel.BackgroundTransparency = 1
+                    textLabel.Text = player.Name
+                    textLabel.TextColor3 = Color3.new(1, 1, 1) -- Белый цвет текста
+                    textLabel.TextScaled = true
+                end
+            else
+                -- Удаление BillboardGui при деактивации
+                if player.Character.Head:FindFirstChild("Nametag") then
+                    player.Character.Head:FindFirstChild("Nametag"):Destroy()
+                end
+            end
+        end
+    end
+
+    -- Применяем никнеймы ко всем существующим игрокам
+    for _, player in ipairs(players:GetPlayers()) do
+        updateNametag(player)
+    end
+
+    -- Обрабатываем новых игроков
+    players.PlayerAdded:Connect(function(player)
+        player.CharacterAdded:Connect(function(character)
+            wait(0.1)
+            updateNametag(player)
+        end)
+    end)
+end
+
+-- Глобальные переменные для управления размерами тела
+_G.BodySize = 2 -- Стандартный размер тела
+_G.BodyResizeEnabled = false  -- Флаг, отвечающий за состояние изменения тела
+
+-- Функция для изменения размеров тела
+local function ModifyBodySize()
+    game:GetService('RunService').RenderStepped:Connect(function()
+        if _G.BodyResizeEnabled then
+            for i, v in next, game:GetService('Players'):GetPlayers() do
+                if v.Name ~= game:GetService('Players').LocalPlayer.Name then
+                    pcall(function()
+                        -- Изменение размера тела (все части тела кроме головы)
+                        for _, part in ipairs(v.Character:GetChildren()) do
+                            if part:IsA("BasePart") and part.Name ~= "Head" then
+                                part.Size = Vector3.new(_G.BodySize, _G.BodySize, _G.BodySize)
+                                part.Transparency = 1
+                                part.BrickColor = BrickColor.new("Red")
+                                part.Material = "Neon"
+                                part.CanCollide = false
+                                part.Massless = true
+                            end
+                        end
+                    end)
+                end
+            end
+        else
+            -- Если чекбокс выключен, возвращаем размеры тела к стандартным
+            for i, v in next, game:GetService('Players'):GetPlayers() do
+                if v.Name ~= game:GetService('Players').LocalPlayer.Name then
+                    pcall(function()
+                        -- Возвращаем стандартный размер тела
+                        for _, part in ipairs(v.Character:GetChildren()) do
+                            if part:IsA("BasePart") and part.Name ~= "Head" then
+                                part.Size = Vector3.new(2, 2, 1) -- Стандартный размер тела
+                                part.Transparency = 0
+                                part.Material = "Plastic"
+                                part.CanCollide = true
+                                part.Massless = false
+                            end
+                        end
+                    end)
+                end
+            end
+        end
+    end)
+end
+
+
+-- Функция для активации/деактивации бесконечного прыжка
+local function ToggleInfiniteJump(state)
+    infiniteJumpEnabled = state
+    
+    -- Соединяем событие "JumpRequest" с нашей логикой
+    if infiniteJumpEnabled then
+        game:GetService("UserInputService").JumpRequest:Connect(function()
+            -- При каждом запросе на прыжок (например, при нажатии пробела)
+            local player = game:GetService("Players").LocalPlayer
+            if player and player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
+                -- Принудительно выполняем прыжок
+                player.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+        end)
+    end
+end
+
+-- Переменная для контроля телепортации по клику
+local teleportByClickEnabled = false
+
+-- Функция для телепортации по клику
+local function ToggleTeleportByClick(state)
+    teleportByClickEnabled = state
+    local userInputService = game:GetService("UserInputService")
+    local player = game:GetService("Players").LocalPlayer
+    local humanoidRootPart = player.Character:WaitForChild("HumanoidRootPart")
+    local mouse = player:GetMouse()
+
+    -- Функция для телепортации по клику мыши с зажатой Z
+    local function onMouseClick()
+        if teleportByClickEnabled and userInputService:IsKeyDown(Enum.KeyCode.Z) then
+            local targetPosition = mouse.Hit.p -- Получаем позицию курсора
+            humanoidRootPart.CFrame = CFrame.new(targetPosition + Vector3.new(0, 3, 0)) -- Телепортируем персонажа на позицию
+        end
+    end
+
+    -- Обработка нажатия левой кнопки мыши
+    mouse.Button1Down:Connect(function()
+        onMouseClick()
+    end)
+end
+
+-- Глобальные переменные для управления хитбоксами
+_G.HeadSize = 15
+_G.Disabled = true  -- Флаг, отвечающий за состояние изменения хитбоксов
+
+-- Функция для изменения хитбоксов
+local function ModifyHitboxes()
+    game:GetService('RunService').RenderStepped:Connect(function()
+        if _G.Disabled then
+            for i, v in next, game:GetService('Players'):GetPlayers() do
+                if v.Name ~= game:GetService('Players').LocalPlayer.Name then
+                    pcall(function()
+                        -- Изменение размера головы
+                        v.Character.Head.Size = Vector3.new(_G.HeadSize, _G.HeadSize, _G.HeadSize)
+                        v.Character.Head.Transparency = 1
+                        v.Character.Head.BrickColor = BrickColor.new("Red")
+                        v.Character.Head.Material = "Neon"
+                        v.Character.Head.CanCollide = false
+                        v.Character.Head.Massless = true
+                    end)
+                end
+            end
+        else
+            -- Если чекбокс выключен, возвращаем размеры хитбоксов к стандартным
+            for i, v in next, game:GetService('Players'):GetPlayers() do
+                if v.Name ~= game:GetService('Players').LocalPlayer.Name then
+                    pcall(function()
+                        -- Возвращаем стандартный размер головы
+                        v.Character.Head.Size = Vector3.new(2, 1, 1) -- Стандартный размер головы
+                        v.Character.Head.Transparency = 0
+                        v.Character.Head.Material = "Plastic"
+                        v.Character.Head.CanCollide = true
+                        v.Character.Head.Massless = false
+                    end)
+                end
+            end
+        end
+    end)
+end
+
+-- Переменная для контроля FOV
+local fovCNTRL = 70 -- начальное значение FOV
+local fovEnabled = false
+
+-- Функция для обновления FOV через манипуляции с CFrame камеры
+local function UpdateFOV()
+    local camera = workspace.CurrentCamera
+    local player = game:GetService("Players").LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+    game:GetService("RunService").RenderStepped:Connect(function()
+        if fovEnabled then
+            -- Создаём эффект FOV, изменяя позицию камеры
+            local distance = 70 / fovCNTRL -- чем выше fovCNTRL, тем меньше расстояние от камеры
+            camera.CFrame = CFrame.new(humanoidRootPart.Position - (camera.CFrame.LookVector * distance), humanoidRootPart.Position)
+        end
+    end)
+end
+
+-- Глобальные переменные для скорости и управления
+local speedEnabled = false
+local playerSpeed = 16 -- 16 - стандартная скорость
+
+-- Функция для изменения скорости через CFrame
+local function ToggleCFrameSpeed(state)
+    speedEnabled = state
+    local player = game:GetService('Players').LocalPlayer
+    local humanoidRootPart = player.Character:WaitForChild("HumanoidRootPart")
+
+    if speedEnabled then
+        game:GetService("RunService").RenderStepped:Connect(function()
+            if not speedEnabled then return end -- Если скорость выключена, то прекращаем выполнение
+
+            -- Управление движением по стандартным направлениям через CFrame
+            local userInput = game:GetService("UserInputService")
+
+            -- Вектор движения
+            local moveDirection = Vector3.new()
+
+            -- Управление клавишами W, A, S, D
+            if userInput:IsKeyDown(Enum.KeyCode.W) then
+                moveDirection = moveDirection + workspace.CurrentCamera.CFrame.LookVector
+            end
+            if userInput:IsKeyDown(Enum.KeyCode.S) then
+                moveDirection = moveDirection - workspace.CurrentCamera.CFrame.LookVector
+            end
+            if userInput:IsKeyDown(Enum.KeyCode.A) then
+                moveDirection = moveDirection - workspace.CurrentCamera.CFrame.RightVector
+            end
+            if userInput:IsKeyDown(Enum.KeyCode.D) then
+                moveDirection = moveDirection + workspace.CurrentCamera.CFrame.RightVector
+            end
+
+            -- Если есть движение, применяем его через CFrame, корректируя скорость
+            if moveDirection.Magnitude > 0 then
+                moveDirection = moveDirection.Unit -- Нормализуем вектор направления
+                humanoidRootPart.CFrame = humanoidRootPart.CFrame + (moveDirection * playerSpeed / 16) -- 16 - стандартная скорость
+            end
+        end)
+    end
+end
+
+-- Функция для изменения скорости
+local function SetCFrameSpeed(value)
+    playerSpeed = value
+end
+
+-- Слайдер для изменения скорости
+movementTab:AddSlider({
+    Name = "WalkSpeed",
+    Min = 1,
+    Max = 150,
+    Default = 16,
+    Color = Color3.fromRGB(0, 255, 0),
+    Increment = 1,
+    ValueName = "Speed",
+    Callback = function(Value)
+        SetCFrameSpeed(Value)
+    end
+})
+
+-- Чекбокс для включения/выключения CFrame скорости
+movementTab:AddToggle({
+    Name = "Enable WalkSpeed",
+    Default = false,
+    Callback = function(Value)
+        ToggleCFrameSpeed(Value)
+    end
+})
+
+movementTab:AddToggle({
+    Name = "Infinite Jump",
+    Default = false,
+    Callback = function(Value)
+        ToggleInfiniteJump(Value)
+    end
+})
+
+-- CFrame Fly с поддержкой контроля полёта
+local function ToggleCFrameFly(state)
+    flying = state
+    local player = game:GetService('Players').LocalPlayer
+    local humanoidRootPart = player.Character:WaitForChild("HumanoidRootPart")
+
+    if flying then
+        game:GetService("RunService").RenderStepped:Connect(function()
+            if flying then
+                -- Обработка управления
+                local userInput = game:GetService("UserInputService")
+                
+                -- Сбрасываем направление
+                direction = Vector3.new(0, 0, 0)
+
+                -- Управление W/A/S/D для перемещения вперёд/назад/влево/вправо
+                if userInput:IsKeyDown(Enum.KeyCode.W) then
+                    direction = direction + workspace.CurrentCamera.CFrame.LookVector
+                end
+                if userInput:IsKeyDown(Enum.KeyCode.S) then
+                    direction = direction - workspace.CurrentCamera.CFrame.LookVector
+                end
+                if userInput:IsKeyDown(Enum.KeyCode.A) then
+                    direction = direction - workspace.CurrentCamera.CFrame.RightVector
+                end
+                if userInput:IsKeyDown(Enum.KeyCode.D) then
+                    direction = direction + workspace.CurrentCamera.CFrame.RightVector
+                end
+
+                -- Управление Space для подъёма и Shift для спуска
+                if userInput:IsKeyDown(Enum.KeyCode.Space) then
+                    direction = direction + Vector3.new(0, flySpeed, 0)
+                end
+                if userInput:IsKeyDown(Enum.KeyCode.LeftShift) then
+                    direction = direction - Vector3.new(0, flySpeed, 0)
+                end
+
+                -- Применение движения через CFrame
+                humanoidRootPart.CFrame = humanoidRootPart.CFrame + direction * flySpeed * 0.1
+            end
+        end)
+    end
+end
+
+-- Слайдер для управления скоростью полёта
+movementTab:AddSlider({
+    Name = "Fly Speed",
+    Min = 1,
+    Max = 50,
+    Default = 1,
+    Color = Color3.fromRGB(0, 255, 0),
+    Increment = 1,
+    ValueName = "Fly Speed",
+    Callback = function(Value)
+        flySpeed = Value
+    end
+})
+
+movementTab:AddToggle({
+    Name = "Fly",
+    Default = false,
+    Callback = function(Value)
+        ToggleCFrameFly(Value)
+    end
+})
+
+-- Подсветка для всех игроков
+local function ToggleHighlight(state)
+    local players = game:GetService("Players")
+
+    -- Функция для добавления подсветки
+    local function applyHighlight(player)
+        if player.Character and not player.Character:FindFirstChild("Highlight") then
+            local highlight = Instance.new("Highlight", player.Character)
+            highlight.FillColor = Color3.fromRGB(255, 0, 0)
+            highlight.OutlineColor = Color3.fromRGB(0, 0, 0)
+            highlight.OutlineTransparency = 0
+            highlight.FillTransparency = 0.5
+        end
+    end
+
+    if state then
+        -- Периодическая проверка на наличие подсветки у всех игроков
+        game:GetService("RunService").RenderStepped:Connect(function()
+            for _, player in ipairs(players:GetPlayers()) do
+                if player.Character then
+                    applyHighlight(player)
+                end
+            end
+        end)
+
+        -- Следим за новыми игроками
+        players.PlayerAdded:Connect(function(player)
+            player.CharacterAdded:Connect(function(character)
+                wait(0.1)
+                applyHighlight(player)
+            end)
+        end)
+    else
+        -- Удаляем подсветку у всех игроков
+        for _, player in ipairs(players:GetPlayers()) do
+            if player.Character and player.Character:FindFirstChild("Highlight") then
+                player.Character:FindFirstChild("Highlight"):Destroy()
+            end
+        end
+    end
+end
+
+visualTab:AddToggle({
+    Name = "Esp",
+    Default = false,
+    Callback = function(Value)
+        ToggleHighlight(Value)
+    end
+})
+
+-- Чекбокс для включения/выключения никнеймов
+visualTab:AddToggle({
+    Name = "Names",
+    Default = false,
+    Callback = function(Value)
+        ToggleNametags(Value)
+    end
+})
+
+-- Chams для рук
+local function ToggleChams(state)
+    local player = game:GetService('Players').LocalPlayer
+    local character = player.Character
+
+    if state then
+        -- Применяем Chams на руки игрока
+        for _, part in ipairs(character:GetChildren()) do
+            if part:IsA("BasePart") and (part.Name == "Left Arm" or part.Name == "Right Arm") then
+                if not part:FindFirstChild("Highlight") then
+                    local highlight = Instance.new("Highlight", part)
+                    highlight.FillColor = Color3.fromRGB(255, 0, 0)
+                    highlight.OutlineColor = Color3.fromRGB(0, 0, 0)
+                    highlight.FillTransparency = 0
+                    highlight.OutlineTransparency = 0.5
+                end
+            end
+        end
+    else
+        -- Убираем Chams с рук
+        for _, part in ipairs(character:GetChildren()) do
+            if part:IsA("BasePart") and part:FindFirstChild("Highlight") then
+                part:FindFirstChild("Highlight"):Destroy()
+            end
+        end
+    end
+end
+
+--visualTab:AddToggle({
+    --Name = "Enable Chams",
+    --Default = false,
+    --Callback = function(Value)
+        --ToggleChams(Value)
+    --end
+--})
+
+-- FOV модификация
+local function SetFOV(fovValue)
+    local camera = workspace.CurrentCamera
+    camera.FieldOfView = fovValue
+end
+
+local function ToggleFOV(state)
+    local camera = workspace.CurrentCamera
+
+    if state then
+        camera.FieldOfView = 120  -- Устанавливаем FOV
+    else
+        camera.FieldOfView = 70   -- Стандартное значение
+    end
+end
+
+--visualTab:AddSlider({
+    --Name = "Custom FOV",
+    --Min = 70,
+    --Max = 120,
+    --Default = 70,
+    --Color = Color3.fromRGB(0, 255, 0),
+    --Increment = 1,
+    --ValueName = "FOV",
+    --Callback = function(Value)
+        --SetFOV(Value)
+    --end
+--})
+
+--visualTab:AddToggle({
+    --Name = "Enable FOV Changer",
+    --Default = false,
+    --Callback = function(Value)
+        --ToggleFOV(Value)
+    --end
+--})
+
+-- Чекбокс для включения/выключения телепортации по клику
+MiscTab:AddToggle({
+    Name = "click TP (hold Z and click)",
+    Default = false,
+    Callback = function(Value)
+        ToggleTeleportByClick(Value)
+    end
+})
+
+-- Чекбокс для включения/выключения изменения хитбоксов
+MiscTab:AddToggle({
+    Name = "Enable hitbox modification",
+    Default = false,
+    Callback = function(Value)
+        _G.Disabled = Value -- Активируем или деактивируем изменение хитбоксов
+        ModifyHitboxes() -- Вызываем функцию для изменения хитбоксов
+    end
+})
+
+-- Слайдер для изменения размера хитбокса головы
+MiscTab:AddSlider({
+    Name = "head hitbox size",
+    Min = 1,
+    Max = 50,
+    Default = 15,
+    Color = Color3.fromRGB(255, 0, 0),
+    Increment = 1,
+    ValueName = "Size",
+    Callback = function(Value)
+        -- Только если чекбокс активирован, мы можем изменять размер хитбоксов
+        if _G.Disabled then
+            _G.HeadSize = Value
+        end
+    end
+})
+
+
+
+OrionLib:Init()
