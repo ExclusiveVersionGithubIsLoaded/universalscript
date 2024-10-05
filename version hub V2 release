@@ -502,6 +502,21 @@ Tabmvsd:AddButton({
 
 Tabmvsd:AddParagraph("Сделано Version", "это я :3")
 
+local AimTab = Window:MakeTab({
+    Name = "Aimblox",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+AimTab:AddButton({
+    Name = "Load Script",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/ExclusiveVersionGithubIsLoaded/universalscript/refs/heads/main/obf%20Aimblox"))()
+    end    
+})
+
+Tabmvsd:AddParagraph("Сделано Version" "и снова я :3")
+
 -- Вкладка для credits
 local creditsTab = Window:MakeTab({
     Name = "credits",
