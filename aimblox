@@ -1,7 +1,7 @@
 -- Скрипт на аимблокс
 
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
-local Window = OrionLib:MakeWindow({Name = "Custom Script", HidePremium = true, SaveConfig = true, ConfigFolder = "OrionTest"})
+local Window = OrionLib:MakeWindow({Name = "Aimblox | Version Hub", HidePremium = true, SaveConfig = true, ConfigFolder = "OrionTest"})
 
 -- Вкладки
 local movementTab = Window:MakeTab({
