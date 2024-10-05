@@ -515,7 +515,7 @@ AimTab:AddButton({
     end    
 })
 
-Tabmvsd:AddParagraph("Сделано Version" "и снова я :3")
+Tabmvsd:AddParagraph("Сделано Version", "и снова я :3")
 
 -- Вкладка для credits
 local creditsTab = Window:MakeTab({
