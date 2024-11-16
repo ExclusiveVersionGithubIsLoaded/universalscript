@@ -517,6 +517,21 @@ AimTab:AddButton({
 
 AimTab:AddParagraph("Сделано Version", "и снова я :3")
 
+local EncountersTab = Window:MakeTab({
+    Name = "Encounters",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+EncountersTab:AddButton({
+    Name = "Load Script",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/ExclusiveVersionGithubIsLoaded/universalscript/refs/heads/main/obf%20encounters"))()
+    end    
+})
+
+EncountersTab:AddParagraph("Сделано Version", "как так?")
+
 -- Вкладка для credits
 local creditsTab = Window:MakeTab({
     Name = "credits",
