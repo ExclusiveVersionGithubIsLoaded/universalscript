@@ -532,6 +532,21 @@ EncountersTab:AddButton({
 
 EncountersTab:AddParagraph("Сделано Version", "как так?")
 
+local MemeTab = Window:MakeTab({
+    Name = "Better meme",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+MemeTab:AddButton({
+    Name = "Load Script",
+    Callback = function()
+        loadstring(game:HttpGet("loadstring(game:HttpGet("https://raw.githubusercontent.com/ExclusiveVersionGithubIsLoaded/universalscript/refs/heads/main/obf%20meme"))()"))()
+    end    
+})
+
+MemeTab:AddParagraph("Сделано Version", "ладно")
+
 -- Вкладка для credits
 local creditsTab = Window:MakeTab({
     Name = "credits",
