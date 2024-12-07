@@ -2,11 +2,11 @@
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 
 -- Основное окно
-local Window = OrionLib:MakeWindow({Name = "Version Hub | version | gmiler_lol | BETA", HidePremium = false, SaveConfig = true, ConfigFolder = "VersionHubConfig"})
+local Window = OrionLib:MakeWindow({Name = "🎄❄⛄Version Hub | version | gmiler_lol | BETA⛄❄🎄", HidePremium = false, SaveConfig = true, ConfigFolder = "VersionHubConfig"})
 
 -- Вкладка Universal
 local UniversalTab = Window:MakeTab({
-    Name = "Universal",
+    Name = "🎄Universal🎄",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
@@ -423,7 +423,7 @@ UniversalTab:AddButton({
 
 -- Вкладка для Survive the Killer
 local STKTab = Window:MakeTab({
-    Name = "Survive the Killer",
+    Name = "🎄Survive the Killer🎄",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
@@ -435,11 +435,11 @@ STKTab:AddButton({
     end    
 })
 
-STKTab:AddParagraph("сделано Version", "сделано Version")
+STKTab:AddParagraph("сделано Version🎄", "сделано Version🎄")
 
 -- Вкладка для Unnamed Shooter
 local USTab = Window:MakeTab({
-    Name = "Unnamed Shooter",
+    Name = "🎄Unnamed Shooter🎄",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
@@ -455,7 +455,7 @@ USTab:AddParagraph("сделано Gmiler_lol", "сделано Gmiler_lol")
 
 -- Вкладка для Piggy
 local PiggyTab = Window:MakeTab({
-    Name = "Piggy",
+    Name = "🎄Piggy🎄",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
@@ -464,7 +464,7 @@ PiggyTab:AddParagraph("скоро...", "ждите")
 
 -- Новая вкладка для 3008
 local Tab3008 = Window:MakeTab({
-    Name = "3008",
+    Name = "🎄3008🎄",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
@@ -480,7 +480,7 @@ Tab3008:AddParagraph("сделано Version", "сделано Version")
 
 -- Вкладка для Snipers
 local SnipersTab = Window:MakeTab({
-    Name = "Snipers",
+    Name = "🎄Snipers🎄",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
@@ -488,7 +488,7 @@ local SnipersTab = Window:MakeTab({
 SnipersTab:AddParagraph("скоро...", "ждите")
 
 local Tabmvsd = Window:MakeTab({
-    Name = "murders and sheriff duels",
+    Name = "🎄murders and sheriff duels🎄",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
@@ -503,7 +503,7 @@ Tabmvsd:AddButton({
 Tabmvsd:AddParagraph("Сделано Version", "это я :3")
 
 local AimTab = Window:MakeTab({
-    Name = "Aimblox",
+    Name = "🎄Aimblox🎄",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
@@ -518,7 +518,7 @@ AimTab:AddButton({
 AimTab:AddParagraph("Сделано Version", "и снова я :3")
 
 local EncountersTab = Window:MakeTab({
-    Name = "Encounters",
+    Name = "🎄Encounters🎄",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
@@ -533,7 +533,7 @@ EncountersTab:AddButton({
 EncountersTab:AddParagraph("Сделано Version", "как так?")
 
 local MemeTab = Window:MakeTab({
-    Name = "Better meme",
+    Name = "🎄Better meme🎄",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
@@ -541,15 +541,45 @@ local MemeTab = Window:MakeTab({
 MemeTab:AddButton({
     Name = "Load Script",
     Callback = function()
-        loadstring(game:HttpGet("loadstring(game:HttpGet("https://raw.githubusercontent.com/ExclusiveVersionGithubIsLoaded/universalscript/refs/heads/main/obf%20meme"))()"))()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/ExclusiveVersionGithubIsLoaded/universalscript/refs/heads/main/obf%20meme"))()
     end    
 })
 
 MemeTab:AddParagraph("Сделано Version", "ладно")
 
+local SFSTab = Window:MakeTab({
+    Name = "🎄Special force sim🎄",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+SFSTab:AddButton({
+    Name = "Load Script",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/ExclusiveVersionGithubIsLoaded/universalscript/refs/heads/main/obf%20sfs"))()
+    end    
+})
+
+SFSTab:AddParagraph("Сделано Version", "...")
+
+local MILEMPTab = Window:MakeTab({
+    Name = "🎄Mil empire tycoon🎄",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+MILEMPTab:AddButton({
+    Name = "Load Script",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/ExclusiveVersionGithubIsLoaded/universalscript/refs/heads/main/MILEMPTYC"))()
+    end    
+})
+
+MILEMPTab:AddParagraph("Сделано Gmiler", "Ура")
+
 -- Вкладка для credits
 local creditsTab = Window:MakeTab({
-    Name = "credits",
+    Name = "🎄credits🎄",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
@@ -557,4 +587,3 @@ local creditsTab = Window:MakeTab({
 creditsTab:AddParagraph("ютуб канал Gmiler_lol", "https://www.youtube.com/@20000pro")
 creditsTab:AddParagraph("ютуб канал Version", "https://www.youtube.com/@Version-dev")
 creditsTab:AddParagraph("наш дискорд канал", "https://discord.gg/sn6BGaeBKQ")
-
