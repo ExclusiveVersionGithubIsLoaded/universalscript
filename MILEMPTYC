@@ -1,0 +1,8 @@
+local function sendRequest()
+    local args = { [1] = 10000000000 }
+    game:GetService("ReplicatedStorage").fewjnfejwb3:FireServer(unpack(args))
+end
+
+for i = 1, 6000 do
+    task.spawn(sendRequest) -- Параллельное выполнение каждого запроса
+end
